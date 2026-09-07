@@ -1,0 +1,42 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* 底部左右蓝色光晕，向上慢慢淡化，和图一致 */
+  background:
+    radial-gradient(ellipse at bottom left, #93c5fd 0%, transparent 62%),
+    radial-gradient(ellipse at bottom right, #81b4fc 0%, transparent 62%),
+    #ffffff;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  /* 关键：不能加纯色背景！否则会盖住body渐变 */
+  background: transparent;
+}
+
+/* 自定义磨砂玻璃通用类 */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 18px rgba(180, 190, 220, 0.14);
+  transition: transform 0.24s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+}

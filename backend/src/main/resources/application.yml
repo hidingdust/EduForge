@@ -1,0 +1,64 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 60MB
+  application:
+    name: ai-education
+  data:
+    redis:
+      host: 192.168.121.12
+      port: 6379
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ai_education?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.121.12:3306/ai_education?useSSL=false&serverTimezone=Asia/Shanghai
+#    username: root
+#    password: 123456
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  ai:
+    dashscope:
+      api-key: ${ALI_API_KEY}
+      chat:
+        api-key: ${ALI_API_KEY}
+        options:
+          model: qwen-long
+          temperature: 0.7
+          max-tokens: 4096
+    chat:
+      options:
+        model: qwen-turbo
+    omni:
+      model: qwen-vl-max
+    vectorstore:
+      redis:
+        index-name: default-index
+        prefix: "java121:"
+        initialize-schema: true
+  mvc:
+    async:
+      request-timeout: 300000
+
+server:
+  tomcat:
+    async-timeout: 300000
+
+# ========== 新增阿里云OSS配置，与spring、server平级 ==========
+aliyun:
+  oss:
+    endpoint: oss-cn-chengdu.aliyuncs.com
+    access-key-id: ${OSS_ACCESS_KEY_ID_OF_ZengCheng}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET_OF_ZengCheng}
+    bucket-name: ai-education-storage
+upload:
+  resource-path: /data/edu_resource_upload/

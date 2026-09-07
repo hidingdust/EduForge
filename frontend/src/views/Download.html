@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI文本问答闯关小游戏（5道测试题）</title>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs/dist/pptxgen.bundle.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #4158D0, #C850C0);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game-box {
+      width: 100%;
+      max-width: 750px;
+      background: #fff;
+      border-radius: 20px;
+      padding: 35px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .score-text {
+      font-size: 18px;
+      color: #666;
+    }
+
+    .progress-wrap {
+      width: 100%;
+      height: 10px;
+      background: #eee;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #4158D0;
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    .question-box {
+      font-size: 22px;
+      line-height: 1.6;
+      color: #222;
+      margin-bottom: 30px;
+      min-height: 70px;
+    }
+
+    .option-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 35px;
+    }
+
+    .option-item {
+      padding: 16px 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 17px;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .option-item:hover {
+      border-color: #4158D0;
+      background: #f0f4ff;
+    }
+
+    .option-right {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .option-wrong {
+      border-color: #ef4444;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    button {
+      padding: 13px 28px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .reset-btn {
+      background: #9ca3af;
+      color: white;
+    }
+
+    .ppt-btn {
+      background: #4158D0;
+      color: white;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    .end-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-inner {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .modal-inner h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-inner p {
+      font-size: 18px;
+      margin: 8px 0;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-box">
+    <div class="top-bar">
+      <div class="title">AI知识闯关答题</div>
+      <div class="score-text">得分：<span id="score">0</span></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="question-box" id="questionBox">题目加载中...</div>
+    <div class="option-list" id="optionList"></div>
+    <div class="btn-group">
+      <button class="reset-btn" onclick="resetGame()">重新答题</button>
+      <button class="ppt-btn" onclick="exportPpt()">导出PPT课件</button>
+    </div>
+  </div>
+
+  <div class="end-modal" id="endModal">
+    <div class="modal-inner">
+      <h2>答题完成！</h2>
+      <p>总题目：<span id="totalNum">0</span> 道</p>
+      <p>答对：<span id="rightNum">0</span> 道</p>
+      <p>答错：<span id="wrongNum">0</span> 道</p>
+      <p>最终得分：<span id="finalScore">0</span> 分</p>
+      <button onclick="closeModal()">确定</button>
+    </div>
+  </div>
+
+  <script>
+    // 【固定5道题目，和你后端Java解析格式完全一致】
+    let questionList = [
+      {
+        question: "Java中instanceof关键字的核心作用是什么？",
+        A: "定义对象变量",
+        B: "运行时判断对象真实类型",
+        C: "循环遍历集合",
+        D: "捕获程序异常",
+        answer: "B"
+      },
+      {
+        question: "PPTX文件本质上属于什么类型文件？",
+        A: "图片二进制文件",
+        B: "XML打包压缩包",
+        C: "纯文本文档",
+        D: "可执行程序",
+        answer: "B"
+      },
+      {
+        question: "Java子类向上转型是否强制要求instanceof判断？",
+        A: "必须判断",
+        B: "不需要，自动向上转型",
+        C: "编译报错",
+        D: "运行报错",
+        answer: "B"
+      },
+      {
+        question: "Spring AI Graph的StateGraph作用是？",
+        A: "数据库持久化",
+        B: "编排AI多节点工作流",
+        C: "接口鉴权",
+        D: "日志打印",
+        answer: "B"
+      },
+      {
+        question: "前端PptxGenJS生成的文件后缀是？",
+        A: ".zip",
+        B: ".doc",
+        C: ".pptx",
+        D: ".html",
+        answer: "C"
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let rightCount = 0;
+    let wrongCount = 0;
+    let isSelect = false;
+
+    const questionBox = document.getElementById('questionBox');
+    const optionList = document.getElementById('optionList');
+    const scoreDom = document.getElementById('score');
+    const progressBar = document.getElementById('progressBar');
+    const endModal = document.getElementById('endModal');
+
+    initGame();
+
+    function initGame() {
+      currentIndex = 0;
+      score = 0;
+      rightCount = 0;
+      wrongCount = 0;
+      scoreDom.innerText = score;
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      isSelect = false;
+      const item = questionList[currentIndex];
+      questionBox.innerText = `第${currentIndex + 1}题：${item.question}`;
+      const percent = ((currentIndex + 1) / questionList.length * 100).toFixed(0);
+      progressBar.style.width = percent + "%";
+      optionList.innerHTML = "";
+
+      const opts = [
+        { key: "A", val: item.A },
+        { key: "B", val: item.B },
+        { key: "C", val: item.C },
+        { key: "D", val: item.D }
+      ];
+      opts.forEach(opt => {
+        let div = document.createElement('div');
+        div.className = "option-item";
+        div.innerText = `${opt.key}. ${opt.val}`;
+        div.onclick = () => chooseOption(opt.key, div);
+        optionList.appendChild(div);
+      })
+    }
+
+    function chooseOption(selectKey, dom) {
+      if (isSelect) return;
+      isSelect = true;
+      const target = questionList[currentIndex];
+      const correctKey = target.answer;
+      const allOpts = optionList.querySelectorAll('.option-item');
+      allOpts.forEach(el => el.style.pointerEvents = "none");
+
+      if (selectKey === correctKey) {
+        dom.classList.add('option-right');
+        score += 10;
+        rightCount++;
+      } else {
+        dom.classList.add('option-wrong');
+        wrongCount++;
+        allOpts.forEach(el => {
+          let label = el.innerText.slice(0, 1);
+          if (label === correctKey) el.classList.add('option-right');
+        })
+      }
+      scoreDom.innerText = score;
+      setTimeout(nextQuestion, 1100);
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex >= questionList.length) {
+        showEndModal();
+        return;
+      }
+      renderQuestion();
+    }
+
+    function showEndModal() {
+      document.getElementById('totalNum').innerText = questionList.length;
+      document.getElementById('rightNum').innerText = rightCount;
+      document.getElementById('wrongNum').innerText = wrongCount;
+      document.getElementById('finalScore').innerText = score;
+      endModal.style.display = "flex";
+    }
+
+    function closeModal() {
+      endModal.style.display = "none";
+      resetGame();
+    }
+
+    function resetGame() {
+      initGame();
+    }
+
+    // 一键导出标准pptx
+    async function exportPpt() {
+      const ppt = new pptxgen();
+      ppt.layout = pptxgen.Layout.LAYOUT_16x9;
+      // 封面
+      const cover = ppt.addSlide();
+      cover.addText("AI五道练习题课件", { x: 2, y: 2, w: 6, fontSize: 36, bold: true, align: "center" });
+      cover.addText("文本智能生成问答题目", { x: 2, y: 3.4, w: 6, fontSize: 20, align: "center", color: "666666" });
+      // 5道题分页
+      questionList.forEach((item, idx) => {
+        let slide = ppt.addSlide();
+        slide.addText(`第${idx + 1}题：${item.question}`, { x: 0.4, y: 0.3, w: 9.2, fontSize: 24, bold: true });
+        slide.addText(`A.${item.A}\nB.${item.B}\nC.${item.C}\nD.${item.D}`, { x: 0.4, y: 1.2, w: 9.2, fontSize: 18, lineSpacing: 26 });
+        slide.addText(`标准答案：${item.answer}`, { x: 0.4, y: 4.1, fontSize: 20, bold: true, color: "FF0000" });
+      })
+      await ppt.writeFile({ fileName: "5道题库.pptx" });
+      alert("PPTX下载完成！");
+    }
+
+    // 对接后端接口，替换为你的接口地址即可
+    /*
+    async function loadBackendData() {
+        const res = await fetch("/你的后端接口地址");
+        questionList = await res.json();
+        initGame();
+    }
+    */
+  </script>
+</body>
+
+</html>
